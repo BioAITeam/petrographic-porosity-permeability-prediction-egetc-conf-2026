@@ -76,6 +76,10 @@ matplotlib.rcParams.update(
         "ps.fonttype": 42,
         "savefig.dpi": FIGURE_DPI,
         "font.family": "DejaVu Sans",
+        "font.size": 10.5,
+        "axes.labelsize": 10.5,
+        "xtick.labelsize": 10.5,
+        "ytick.labelsize": 10.5,
     }
 )
 
@@ -573,27 +577,27 @@ def tune_xgboost(
 
 
 def plot_data_overview(df1: pd.DataFrame, df2: pd.DataFrame, out_dir: Path) -> None:
-    fig = plt.figure(figsize=(12, 11))
+    fig = plt.figure(figsize=(7.4, 7.3))
     fig.patch.set_facecolor("white")
-    grid = fig.add_gridspec(3, 4, hspace=0.45, wspace=0.38)
+    grid = fig.add_gridspec(4, 2, height_ratios=[1, 1, 1, .50],
+                          hspace=.70, wspace=.35)
     for col, (df, colors) in enumerate(
         [
             (df1, FORM_COLORS_P1),
             (df2, FORM_COLORS_P2),
         ]
     ):
-        ax = fig.add_subplot(grid[0, col * 2 : col * 2 + 2])
+        ax = fig.add_subplot(grid[0, col])
         porosity_valid = df.dropna(subset=["Porosity_pct"])
         for formation, color in colors.items():
             subset = porosity_valid.loc[porosity_valid["Formation"] == formation, "Porosity_pct"]
             if not subset.empty:
                 ax.hist(subset, bins=15, alpha=0.65, color=color, label=formation, edgecolor="white")
-        ax.set_xlabel("Porosity (%)", fontsize=12)
-        ax.set_ylabel("Count", fontsize=12)
+        ax.set_xlabel("Porosity (%)")
+        ax.set_ylabel("Count")
         label_panel(ax, col)
-        ax.legend(fontsize=10)
 
-        ax2 = fig.add_subplot(grid[1, col * 2 : col * 2 + 2])
+        ax2 = fig.add_subplot(grid[1, col])
         paired = df.dropna(subset=["Porosity_pct", "log_Perm"])
         for formation, color in colors.items():
             subset = paired[paired["Formation"] == formation]
@@ -603,39 +607,45 @@ def plot_data_overview(df1: pd.DataFrame, df2: pd.DataFrame, out_dir: Path) -> N
                     subset["log_Perm"],
                     c=color,
                     alpha=0.6,
-                    s=14,
+                    s=9,
                     label=formation,
                     edgecolors="white",
                     linewidths=0.2,
                 )
-        ax2.set_xlabel("Porosity (%)", fontsize=12)
-        ax2.set_ylabel(r"$\log_{10}(k)$ [mD]", fontsize=12)
+        ax2.set_xlabel("Porosity (%)")
+        ax2.set_ylabel(r"$\log_{10}(k)$ [mD]")
         label_panel(ax2, 2 + col)
-        ax2.legend(fontsize=10)
 
-        ax3 = fig.add_subplot(grid[2, col * 2 : col * 2 + 2])
+        ax3 = fig.add_subplot(grid[2, col])
         mineral_columns = ["Qtz_detrital", "Calcite_cement", "Illite", "IGP"]
         values = [df[column].dropna().to_numpy() for column in mineral_columns]
-        boxes = ax3.boxplot(values, labels=mineral_columns, patch_artist=True)
+        boxes = ax3.boxplot(values, tick_labels=["Detrital\nquartz", "Calcite\ncement", "Illite", "IGP"],
+                            patch_artist=True, flierprops={"markersize": 2.5})
         for patch, color in zip(
             boxes["boxes"], [PALETTE["teal"], PALETTE["navy"], PALETTE["gold"], PALETTE["mid"]]
         ):
             patch.set_facecolor(color)
             patch.set_alpha(0.7)
-        ax3.set_ylabel("Vol. %", fontsize=12)
+        ax3.set_ylabel("Vol. %")
         label_panel(ax3, 4 + col)
-        ax3.tick_params(axis="x", labelsize=10, rotation=15)
+        ax3.tick_params(axis="x", labelsize=10.5)
+
+        legend_axis = fig.add_subplot(grid[3, col])
+        legend_axis.set_axis_off()
+        handles, labels = ax.get_legend_handles_labels()
+        legend_axis.legend(handles, labels, loc="center", frameon=False,
+                           fontsize=10.5, handlelength=1.2, labelspacing=.25)
 
         for axis in (ax, ax2, ax3):
-            axis.tick_params(axis="y", labelsize=10)
+            axis.tick_params(axis="both", labelsize=10.5)
             axis.spines["top"].set_visible(False)
             axis.spines["right"].set_visible(False)
-    fig.subplots_adjust(top=0.98, hspace=0.45, wspace=0.38)
+    fig.subplots_adjust(left=.09, right=.985, top=.95, bottom=.04)
     save_figure(fig, out_dir, "Figure-1")
 
 
 def plot_cv_benchmark(cv_results: dict[str, pd.DataFrame], out_dir: Path) -> None:
-    fig, axes = plt.subplots(2, 2, figsize=(12, 8))
+    fig, axes = plt.subplots(2, 2, figsize=(7.4, 4.6))
     fig.patch.set_facecolor("white")
     panels = [
         ("p1_por", axes[0, 0]),
@@ -649,8 +659,9 @@ def plot_cv_benchmark(cv_results: dict[str, pd.DataFrame], out_dir: Path) -> Non
             PALETTE["gold"] if model == "Stacking Ensemble" else PALETTE["teal"]
             for model in data["Model"]
         ]
+        model_labels = data["Model"].replace({"Random Forest": "RF", "Stacking Ensemble": "Stacking"})
         ax.barh(
-            data["Model"],
+            model_labels,
             data["R2_mean"],
             xerr=data["R2_std"],
             color=colors,
@@ -658,7 +669,8 @@ def plot_cv_benchmark(cv_results: dict[str, pd.DataFrame], out_dir: Path) -> Non
             alpha=0.9,
             capsize=3,
         )
-        ax.set_xlabel(r"$R^2$ (mean $\pm$ std)", fontsize=9)
+        ax.set_xlabel(r"$R^2$ (mean $\pm$ std)")
+        ax.tick_params(axis="both", labelsize=10.5)
         label_panel(ax, panel_index)
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
@@ -667,9 +679,12 @@ def plot_cv_benchmark(cv_results: dict[str, pd.DataFrame], out_dir: Path) -> Non
 
 
 def plot_predicted_vs_actual(prediction_data: list[dict], out_dir: Path) -> None:
-    fig, axes = plt.subplots(2, 2, figsize=(11, 9))
+    fig = plt.figure(figsize=(7.4, 6.3))
+    grid = fig.add_gridspec(4, 2, height_ratios=[1, .22, 1, .22],
+                          hspace=.65, wspace=.40)
+    axes = [fig.add_subplot(grid[row, col]) for row in (0, 2) for col in (0, 1)]
     fig.patch.set_facecolor("white")
-    for panel_index, (ax, item) in enumerate(zip(axes.flat, prediction_data)):
+    for panel_index, (ax, item) in enumerate(zip(axes, prediction_data)):
         y_true = item["y_true"]
         y_pred = item["y_pred"]
         forms = item["forms"]
@@ -681,7 +696,7 @@ def plot_predicted_vs_actual(prediction_data: list[dict], out_dir: Path) -> None
                     y_pred[mask],
                     c=color,
                     alpha=0.7,
-                    s=20,
+                    s=10,
                     label=formation,
                     edgecolors="white",
                     linewidths=0.3,
@@ -691,36 +706,59 @@ def plot_predicted_vs_actual(prediction_data: list[dict], out_dir: Path) -> None
         ax.plot([lower, upper], [lower, upper], "k--", linewidth=1.2)
         metrics = item["metrics"]
         ax.text(
-            0.96,
-            0.05,
+            0.03,
+            0.97,
             f"CV $R^2$ = {metrics['R2_mean']:.3f} $\\pm$ {metrics['R2_std']:.3f}\n"
             f"CV RMSE = {metrics['RMSE_mean']:.3f} $\\pm$ {metrics['RMSE_std']:.3f}",
             transform=ax.transAxes,
-            fontsize=9,
-            ha="right",
-            va="bottom",
-            bbox={"boxstyle": "round,pad=0.3", "facecolor": PALETTE["light"], "alpha": 0.9},
+            fontsize=10.5,
+            ha="left",
+            va="top",
+            bbox={"boxstyle": "square,pad=0.15", "facecolor": "white", "edgecolor": "none", "alpha": 0.9},
         )
-        ax.set_xlabel(f"Measured {item['label']}", fontsize=9)
-        ax.set_ylabel("Predicted (out-of-fold)", fontsize=9)
+        ax.set_xlabel(f"Measured {item['label']}")
+        ax.set_ylabel("Predicted (out-of-fold)")
+        ax.tick_params(axis="both", labelsize=10.5)
         label_panel(ax, panel_index)
-        ax.legend(fontsize=6)
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
-    fig.tight_layout()
+    for dataset, row in enumerate((1, 3)):
+        legend_axis = fig.add_subplot(grid[row, :])
+        legend_axis.set_axis_off()
+        handles, labels = axes[dataset * 2].get_legend_handles_labels()
+        legend_axis.legend(handles, labels, loc="center", frameon=False,
+                           fontsize=10.5, ncol=2, columnspacing=1.6,
+                           handletextpad=.3, labelspacing=.3)
+    fig.subplots_adjust(left=.095, right=.985, top=.945, bottom=.035)
     save_figure(fig, out_dir, "Figure-3")
 
 
 def plot_shap_beeswarms(shap_data: list[dict], out_dir: Path) -> None:
     np.random.seed(RANDOM_SEED)
-    fig, axes = plt.subplots(2, 2, figsize=(12, 11))
+    fig, axes = plt.subplots(2, 2, figsize=(7.4, 7.04))
     fig.patch.set_facecolor("white")
+    feature_labels = {
+        "Formation_code": "Formation code",
+        "TiOx_auth": "Auth. Ti oxides",
+        "IGV_pct": "IGV (%)",
+        "Qtz_detrital": "Detrital quartz",
+        "Total_cement": "Total cement",
+        "log_GS": "Log grain size",
+        "Calcite_cement": "Calcite cement",
+        "K_feldspar": "K-feldspar",
+        "Quartz_index": "Quartz index",
+        "RQI_proxy": "RQI proxy",
+        "Total_clay": "Total clay",
+        "Chlorite_auth": "Auth. chlorite",
+        "Clay_cement_ratio": "Clay/cement",
+        "Qtz_cement": "Quartz cement",
+    }
     for panel_index, (ax, item) in enumerate(zip(axes.flat, shap_data)):
         plt.sca(ax)
         shap.summary_plot(
             item["shap_values"],
             item["X"],
-            feature_names=item["feature_names"],
+            feature_names=[feature_labels.get(name, name) for name in item["feature_names"]],
             show=False,
             plot_type="dot",
             max_display=10,
@@ -731,15 +769,15 @@ def plot_shap_beeswarms(shap_data: list[dict], out_dir: Path) -> None:
         for collection in ax.collections:
             collection.set_rasterized(False)
         label_panel(ax, panel_index)
-        ax.set_xlabel(ax.get_xlabel(), fontsize=12)
-        ax.tick_params(axis="both", labelsize=11)
+        ax.set_xlabel("SHAP value", fontsize=10.5)
+        ax.tick_params(axis="both", labelsize=10.5)
         ax.spines["top"].set_visible(False)
     fig.text(
         0.5,
         0.012,
-        "Feature value: blue = low | red = high",
+        "Feature value: blue = low; red = high",
         ha="center",
-        fontsize=12,
+        fontsize=10.5,
         color=PALETTE["gray"],
     )
     fig.tight_layout(rect=(0, 0.025, 1, 1))
@@ -806,7 +844,7 @@ def plot_shap_dependence(shap_data: list[dict], out_dir: Path) -> None:
 def plot_residuals(residual_data: list[list[dict]], out_dir: Path) -> None:
     # Two rows per target keep eight diagnostic panels readable at standard
     # text width.
-    fig, axes = plt.subplots(4, 2, figsize=(12, 16))
+    fig, axes = plt.subplots(4, 2, figsize=(7.4, 6.5))
     fig.patch.set_facecolor("white")
     for target_index, groups in enumerate(residual_data):
         summary_row = target_index * 2
@@ -820,30 +858,30 @@ def plot_residuals(residual_data: list[list[dict]], out_dir: Path) -> None:
             residual,
             c=PALETTE["navy"],
             alpha=0.5,
-            s=22,
+            s=8,
             edgecolors="white",
             linewidths=0.2,
         )
         axes[summary_row, 0].axhline(
             0, color=PALETTE["dark_red"], linestyle="--", linewidth=1.5
         )
-        axes[summary_row, 0].set_xlabel(f"Predicted {label}", fontsize=12)
-        axes[summary_row, 0].set_ylabel("Residual", fontsize=12)
+        axes[summary_row, 0].set_xlabel(f"Predicted {label}")
+        axes[summary_row, 0].set_ylabel("Residual")
         axes[summary_row, 1].hist(
             residual, bins=30, color=PALETTE["teal"], edgecolor="white", alpha=0.85
         )
         axes[summary_row, 1].axvline(
             0, color=PALETTE["dark_red"], linestyle="--", linewidth=1.5
         )
-        axes[summary_row, 1].set_xlabel("Residual", fontsize=12)
-        axes[summary_row, 1].set_ylabel("Count", fontsize=12)
+        axes[summary_row, 1].set_xlabel("Residual")
+        axes[summary_row, 1].set_ylabel("Count")
         for col, group in enumerate(groups):
             group_residual = group["y_true"] - group["y_pred"]
             axes[dataset_row, col].scatter(
                 group["y_pred"],
                 group_residual,
                 alpha=0.55,
-                s=22,
+                s=8,
                 color=group["color"],
                 edgecolors="white",
                 linewidths=0.2,
@@ -851,14 +889,14 @@ def plot_residuals(residual_data: list[list[dict]], out_dir: Path) -> None:
             axes[dataset_row, col].axhline(
                 0, color=PALETTE["dark_red"], linestyle="--", linewidth=1.2
             )
-            axes[dataset_row, col].set_xlabel(f"Predicted {label}", fontsize=12)
-            axes[dataset_row, col].set_ylabel("Residual", fontsize=12)
+            axes[dataset_row, col].set_xlabel(f"Predicted {label}")
+            axes[dataset_row, col].set_ylabel("Residual")
     for panel_index, ax in enumerate(axes.flat):
         label_panel(ax, panel_index)
-        ax.tick_params(axis="both", labelsize=10)
+        ax.tick_params(axis="both", labelsize=10.5)
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
-    fig.tight_layout()
+    fig.tight_layout(h_pad=.6, w_pad=.8)
     save_figure(fig, out_dir, "Figure-5")
 
 
