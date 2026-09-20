@@ -78,8 +78,6 @@ $env:PYTHONHASHSEED = "42"
 
 Reference SHAP fits use all available rows for explanation only. Reference metric standard deviations use divisor five. The ordinal reference benchmark and nominally encoded grouped models use different feature specifications; their estimates must not be interchanged. Optional same-fold HPO is a selection-dependent diagnostic, not an unbiased optimization gain.
 
-Figures are saved directly as vector PDFs with embedded fonts; 300 dpi applies only to any rasterized elements.
-
 ## License and citation
 
 Original code and documentation are available solely for noncommercial research and education, subject to the citation and redistribution conditions in [LICENSE](LICENSE). Commercial use requires separate permission. This restricted license is not an unrestricted open-source license.
