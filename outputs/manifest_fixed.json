@@ -1,0 +1,20 @@
+{
+  "seed": 42,
+  "nested_trials": 40,
+  "stage": "fixed",
+  "versions": {
+    "python": "3.12.6",
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "matplotlib": "3.10.9",
+    "scikit-learn": "1.8.0",
+    "xgboost": "2.1.4",
+    "lightgbm": "4.6.0",
+    "shap": "0.52.0",
+    "optuna": "3.6.1"
+  },
+  "formation_encoding": "fold-local one-hot, unseen levels all-zero",
+  "clay_cement_balance": "clay / (clay + cement), zero if both absent",
+  "well_groups_p1": "formation family plus source sample prefix, D for Buntsandstein D",
+  "statistics": "mean fold metrics and sample SD; pooled metrics reported separately"
+}

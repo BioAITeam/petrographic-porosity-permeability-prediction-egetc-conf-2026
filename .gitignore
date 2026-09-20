@@ -1,0 +1,47 @@
+# Python environments and caches
+venv/
+.venv/
+env/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Test, type-checker, and notebook caches
+/code/test_validation.py
+/code/validate_evaluation.py
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.coverage
+htmlcov/
+
+# Packaging and build products
+build/
+dist/
+*.egg-info/
+
+# Operating-system and editor files
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+
+# Secrets, logs, and temporary files
+/temp/
+.env
+.env.*
+!.env.example
+*.log
+*.tmp
+*.bak
+~$*
+
+work/
+*.pem
+*.key
+credentials*.json
+*.joblib
+*.pkl

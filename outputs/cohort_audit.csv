@@ -1,0 +1,7 @@
+task,n,wells,formations,numeric_features,missing_predictor_cells,target_missing
+p1_porosity,157,6,4,18,0,7
+p1_conditional,123,5,3,19,0,41
+p1_petrography,123,5,3,18,0,41
+p2_porosity,850,51,4,17,0,25
+p2_conditional,785,50,4,18,0,85
+p2_petrography,785,50,4,17,0,85
